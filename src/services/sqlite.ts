@@ -9,6 +9,11 @@ export type Expense = {
   notes: string | null;
 };
 
+export type CategoryWiseExpense = {
+  category: string;
+  total: number;
+};
+
 export type Budget = {
   id?: number;
   month: string;
@@ -64,6 +69,22 @@ export const getExpenses = async (): Promise<Expense[]> => {
     return allRows;
   } catch (error) {
     console.error('Error getting expenses:', error);
+    throw error;
+  }
+};
+
+export const getCategoryWiseExpense = async (): Promise<CategoryWiseExpense[]> => {
+  try {
+    const query = `
+      SELECT category, SUM(amount) as total
+      FROM expenses
+      GROUP BY category
+      HAVING total > 0;
+    `;
+    const result = await db.getAllAsync<CategoryWiseExpense>(query);
+    return result;
+  } catch (error) {
+    console.error('Error getting category-wise expenses:', error);
     throw error;
   }
 };
