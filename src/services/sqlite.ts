@@ -51,10 +51,19 @@ export const addExpense = async (expense: Omit<Expense, 'id'>) => {
       expense.date,
       expense.notes || null
     );
-    console.log('Expense added with ID:', result.lastInsertRowId);
     return result.lastInsertRowId;
   } catch (error) {
     console.error('Error adding expense:', error);
+    throw error;
+  }
+};
+
+export const getExpenses = async (): Promise<Expense[]> => {
+  try {
+    const allRows = await db.getAllAsync<Expense>('SELECT * FROM expenses ORDER BY date DESC');
+    return allRows;
+  } catch (error) {
+    console.error('Error getting expenses:', error);
     throw error;
   }
 };
