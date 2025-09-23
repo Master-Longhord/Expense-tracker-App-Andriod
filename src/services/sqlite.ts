@@ -9,6 +9,11 @@ export type Expense = {
   notes: string | null;
 };
 
+export type CategoryWiseExpense = {
+  category: string;
+  total: number;
+};
+
 export type Budget = {
   id?: number;
   month: string;
@@ -51,10 +56,35 @@ export const addExpense = async (expense: Omit<Expense, 'id'>) => {
       expense.date,
       expense.notes || null
     );
-    console.log('Expense added with ID:', result.lastInsertRowId);
     return result.lastInsertRowId;
   } catch (error) {
     console.error('Error adding expense:', error);
+    throw error;
+  }
+};
+
+export const getExpenses = async (): Promise<Expense[]> => {
+  try {
+    const allRows = await db.getAllAsync<Expense>('SELECT * FROM expenses ORDER BY date DESC');
+    return allRows;
+  } catch (error) {
+    console.error('Error getting expenses:', error);
+    throw error;
+  }
+};
+
+export const getCategoryWiseExpense = async (): Promise<CategoryWiseExpense[]> => {
+  try {
+    const query = `
+      SELECT category, SUM(amount) as total
+      FROM expenses
+      GROUP BY category
+      HAVING total > 0;
+    `;
+    const result = await db.getAllAsync<CategoryWiseExpense>(query);
+    return result;
+  } catch (error) {
+    console.error('Error getting category-wise expenses:', error);
     throw error;
   }
 };
