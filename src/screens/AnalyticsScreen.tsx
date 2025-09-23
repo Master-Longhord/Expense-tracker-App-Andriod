@@ -54,15 +54,15 @@ const AnalyticsScreen: React.FC = () => {
             <Card.Content>
               <PieChart
                 data={chartData}
-                width={screenWidth - 64} // Adjusted for card padding
+                width={screenWidth - 64}
                 height={220}
                 chartConfig={chartConfig}
                 accessor={"population"}
                 backgroundColor={"transparent"}
                 paddingLeft={"15"}
-                center={[screenWidth / 8, 0]} // Adjust center for better alignment
-                absolute // To show absolute values, not percentages
-                hasLegend={false} // We are building our own legend
+                center={[screenWidth / 8, 0]}
+                absolute
+                hasLegend={false}
               />
               <View style={styles.legendWrapper}>
                 {chartData.map((item) => (

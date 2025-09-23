@@ -63,9 +63,19 @@ export const addExpense = async (expense: Omit<Expense, 'id'>) => {
   }
 };
 
-export const getExpenses = async (): Promise<Expense[]> => {
+export const getExpenses = async (startDate?: string): Promise<Expense[]> => {
   try {
-    const allRows = await db.getAllAsync<Expense>('SELECT * FROM expenses ORDER BY date DESC');
+    let query = 'SELECT * FROM expenses';
+    const params = [];
+
+    if (startDate) {
+      query += ' WHERE date >= ?';
+      params.push(startDate);
+    }
+
+    query += ' ORDER BY date DESC';
+
+    const allRows = await db.getAllAsync<Expense>(query, ...params);
     return allRows;
   } catch (error) {
     console.error('Error getting expenses:', error);
@@ -73,15 +83,19 @@ export const getExpenses = async (): Promise<Expense[]> => {
   }
 };
 
-export const getCategoryWiseExpense = async (): Promise<CategoryWiseExpense[]> => {
+export const getCategoryWiseExpense = async (startDate?: string): Promise<CategoryWiseExpense[]> => {
   try {
-    const query = `
-      SELECT category, SUM(amount) as total
-      FROM expenses
-      GROUP BY category
-      HAVING total > 0;
-    `;
-    const result = await db.getAllAsync<CategoryWiseExpense>(query);
+    let query = 'SELECT category, SUM(amount) as total FROM expenses';
+    const params = [];
+
+    if (startDate) {
+      query += ' WHERE date >= ?';
+      params.push(startDate);
+    }
+
+    query += ' GROUP BY category HAVING total > 0 ORDER BY total DESC';
+
+    const result = await db.getAllAsync<CategoryWiseExpense>(query, ...params);
     return result;
   } catch (error) {
     console.error('Error getting category-wise expenses:', error);
