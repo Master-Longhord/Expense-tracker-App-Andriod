@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
-import { Text, Card, ProgressBar, List, Divider, FAB } from 'react-native-paper';
+import { Text, Card, ProgressBar, List, Divider, FAB, Appbar } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { AppNavigatorProps } from '../navigation/types';
 import { formatCurrency } from '../utils/formatters';
@@ -16,7 +16,6 @@ const MOCK_EXPENSES = [
 
 const DashboardScreen: React.FC = () => {
   const navigation = useNavigation<AppNavigatorProps>();
-
   const totalSpent = MOCK_EXPENSES.reduce((sum, expense) => sum + expense.amount, 0);
   const remainingBudget = MOCK_BUDGET - totalSpent;
   const budgetProgress = MOCK_BUDGET > 0 ? totalSpent / MOCK_BUDGET : 0;
@@ -32,6 +31,10 @@ const DashboardScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <Appbar.Header>
+        <Appbar.Content title="Dashboard" />
+      </Appbar.Header>
+      
       <Card style={styles.summaryCard}>
         <Card.Content>
           <Text variant="titleLarge">Budget Summary</Text>
@@ -66,11 +69,11 @@ const DashboardScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 40,
     backgroundColor: '#f5f5f5',
   },
   summaryCard: {
     marginHorizontal: 16,
+    marginTop: 16,
   },
   progressBar: {
     marginTop: 16,
