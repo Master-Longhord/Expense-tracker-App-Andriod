@@ -40,3 +40,21 @@ export const initDB = async () => {
     throw error;
   }
 };
+
+export const addExpense = async (expense: Omit<Expense, 'id'>) => {
+  try {
+    const result = await db.runAsync(
+      'INSERT INTO expenses (amount, merchant, category, date, notes) VALUES (?, ?, ?, ?, ?)',
+      expense.amount,
+      expense.merchant,
+      expense.category,
+      expense.date,
+      expense.notes || null
+    );
+    console.log('Expense added with ID:', result.lastInsertRowId);
+    return result.lastInsertRowId;
+  } catch (error) {
+    console.error('Error adding expense:', error);
+    throw error;
+  }
+};

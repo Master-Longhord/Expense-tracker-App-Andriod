@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, TextInput, Button, Chip } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { AppNavigatorProps } from '../navigation/types';
+import { addExpense } from '../services/sqlite'; 
 
 const CATEGORIES = ['Food', 'Transport', 'Groceries', 'Shopping', 'Bills', 'Entertainment', 'Health'];
 
@@ -15,7 +16,7 @@ const AddExpenseScreen: React.FC = () => {
 
   const isFormValid = amount && merchant && selectedCategory;
 
-  const handleSaveExpense = () => {
+  const handleSaveExpense = async () => {
     if (!isFormValid) return;
 
     const expenseData = {
@@ -23,10 +24,16 @@ const AddExpenseScreen: React.FC = () => {
       merchant,
       category: selectedCategory,
       notes,
-      date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+      date: new Date().toISOString().split('T')[0],
     };
-    console.log('Saving Expense:', expenseData);
-    navigation.goBack();
+
+    try {
+      await addExpense(expenseData);
+      navigation.goBack(); 
+    } catch (error) {
+      console.error("Failed to save expense to database", error);
+      // Optionally, show an alert to the user here
+    }
   };
 
   return (
