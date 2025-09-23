@@ -1,11 +1,10 @@
 import React from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
-import { Text, Card, ProgressBar, List, FAB, Divider } from 'react-native-paper';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
-import { formatCurrency } from '../utils/formatters'; // <-- IMPORT OUR NEW FUNCTION
+import { Text, Card, ProgressBar, List, Divider, FAB } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
+import { AppNavigatorProps } from '../navigation/types';
+import { formatCurrency } from '../utils/formatters';
 
-// --- MOCK DATA ---
 const MOCK_BUDGET = 500000.0;
 const MOCK_EXPENSES = [
   { id: '1', merchant: 'Shoprite', category: 'Groceries', amount: 12550.0, date: '2025-09-22' },
@@ -15,10 +14,9 @@ const MOCK_EXPENSES = [
   { id: '5', merchant: 'The Place Restaurant', category: 'Food', amount: 7500.0, date: '2025-09-18' },
 ];
 
+const DashboardScreen: React.FC = () => {
+  const navigation = useNavigation<AppNavigatorProps>();
 
-type DashboardScreenProps = NativeStackScreenProps<RootStackParamList, 'Dashboard'>;
-
-const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
   const totalSpent = MOCK_EXPENSES.reduce((sum, expense) => sum + expense.amount, 0);
   const remainingBudget = MOCK_BUDGET - totalSpent;
   const budgetProgress = MOCK_BUDGET > 0 ? totalSpent / MOCK_BUDGET : 0;
@@ -34,7 +32,6 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* --- Budget Summary Card --- */}
       <Card style={styles.summaryCard}>
         <Card.Content>
           <Text variant="titleLarge">Budget Summary</Text>
@@ -46,7 +43,6 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
         </Card.Content>
       </Card>
 
-      {/* --- Recent Expenses List --- */}
       <Text variant="headlineSmall" style={styles.listHeader}>
         Recent Expenses
       </Text>
@@ -58,7 +54,6 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
         style={styles.list}
       />
 
-      {/* --- Floating Action Button --- */}
       <FAB
         icon="plus"
         style={styles.fab}
@@ -71,10 +66,11 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 40,
     backgroundColor: '#f5f5f5',
   },
   summaryCard: {
-    margin: 16,
+    marginHorizontal: 16,
   },
   progressBar: {
     marginTop: 16,
@@ -87,6 +83,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   listHeader: {
+    marginTop: 24,
     marginLeft: 16,
     marginBottom: 8,
   },

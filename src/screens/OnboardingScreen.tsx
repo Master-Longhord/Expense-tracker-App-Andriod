@@ -10,9 +10,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }) => {
   const [budget, setBudget] = React.useState('');
 
   const handleSetBudget = () => {
-    // will add logic to save this later
-    console.log('Budget set to:', budget);
-    navigation.replace('Dashboard');
+    navigation.replace('Main');
   };
 
   return (

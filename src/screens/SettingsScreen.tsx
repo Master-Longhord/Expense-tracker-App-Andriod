@@ -1,15 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, Button } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
+import { View, Text, StyleSheet } from 'react-native';
 
-type SettingsScreenProps = NativeStackScreenProps<RootStackParamList, 'Settings'>;
-
-const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
+const AnalyticsScreen: React.FC = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Settings</Text>
-      <Button title="Go Back to Dashboard" onPress={() => navigation.goBack()} />
+      <Text style={styles.title}>Analytics</Text>
     </View>
   );
 };
@@ -24,8 +19,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
   },
 });
 
-export default SettingsScreen;
+export default AnalyticsScreen;

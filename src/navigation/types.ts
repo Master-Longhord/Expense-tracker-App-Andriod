@@ -1,7 +1,9 @@
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 export type RootStackParamList = {
   Onboarding: undefined;
-  Dashboard: undefined;
+  Main: undefined;
   AddExpense: undefined;
-  Analytics: undefined;
-  Settings: undefined;
 };
+
+export type AppNavigatorProps = NativeStackNavigationProp<RootStackParamList>;
