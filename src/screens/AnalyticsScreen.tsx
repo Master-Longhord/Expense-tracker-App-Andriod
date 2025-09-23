@@ -4,16 +4,16 @@ import { Appbar, Text, Card, List, Divider, SegmentedButtons } from 'react-nativ
 import { useFocusEffect } from '@react-navigation/native';
 import { PieChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
-import { getCategoryWiseExpense, CategoryWiseExpense } from '../services/sqlite';
+import { getCategoryWiseExpense, CategoryWiseExpense, getExpenses, Expense } from '../services/sqlite';
 import { formatCurrency } from '../utils/formatters';
 
 const screenWidth = Dimensions.get('window').width;
-
 const colors = ["#6200ee", "#03dac4", "#cf6679", "#ffab00", "#3700b3", "#018786"];
 
 const AnalyticsScreen: React.FC = () => {
   const [categoryData, setCategoryData] = useState<CategoryWiseExpense[]>([]);
-  const [filter, setFilter] = useState('month'); // 'week', 'month', 'all'
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [filter, setFilter] = useState('month');
 
   const getStartDate = (period: string) => {
     const now = new Date();
@@ -25,24 +25,35 @@ const AnalyticsScreen: React.FC = () => {
       const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
       return monthAgo.toISOString().split('T')[0];
     }
-    return undefined; // 'all' time
+    return undefined;
   };
 
   const loadAnalyticsData = useCallback(async () => {
     try {
       const startDate = getStartDate(filter);
-      const data = await getCategoryWiseExpense(startDate);
-      setCategoryData(data);
+      // Fetch both sets of data concurrently for performance
+      const [catData, expData] = await Promise.all([
+        getCategoryWiseExpense(startDate),
+        getExpenses(startDate)
+      ]);
+      setCategoryData(catData);
+      setExpenses(expData);
     } catch (error) {
       console.error('Failed to load analytics data', error);
     }
-  }, [filter]); // Re-run this function when the filter changes
+  }, [filter]);
 
   useFocusEffect(
     useCallback(() => {
       loadAnalyticsData();
     }, [loadAnalyticsData])
   );
+
+  // --- CALCULATE INSIGHTS ---
+  const totalSpent = categoryData.reduce((sum, item) => sum + item.total, 0);
+  const transactionCount = expenses.length;
+  const highestCategory = categoryData[0]?.category || 'N/A';
+  const averageSpend = transactionCount > 0 ? totalSpent / transactionCount : 0;
 
   const chartData = categoryData.map((item, index) => ({
     name: item.category,
@@ -74,42 +85,63 @@ const AnalyticsScreen: React.FC = () => {
           style={styles.filterButtons}
         />
 
-        {categoryData.length === 0 ? (
+        {expenses.length === 0 ? (
           <Text style={styles.noDataText}>No spending data for this period.</Text>
         ) : (
-          <Card style={styles.card}>
-            <Card.Title title="Spending Breakdown" />
-            <Card.Content>
-              <PieChart
-                data={chartData}
-                width={screenWidth - 64}
-                height={220}
-                chartConfig={chartConfig}
-                accessor={"population"}
-                backgroundColor={"transparent"}
-                paddingLeft={"15"}
-                center={[screenWidth / 8, 0]}
-                absolute
-                hasLegend={false}
-              />
-              <View style={styles.legendWrapper}>
-                {chartData.map((item) => (
-                  <React.Fragment key={item.name}>
-                    <List.Item
-                      title={item.name}
-                      left={() => (
-                        <View style={[styles.legendColor, { backgroundColor: item.color }]} />
-                      )}
-                      right={() => (
-                        <Text style={styles.legendAmount}>{formatCurrency(item.population)}</Text>
-                      )}
-                    />
-                    <Divider />
-                  </React.Fragment>
-                ))}
-              </View>
-            </Card.Content>
-          </Card>
+          <>
+            {/* --- NEW INSIGHTS CARD --- */}
+            <Card style={styles.card}>
+              <Card.Title title="Key Insights" />
+              <Card.Content style={styles.insightsContainer}>
+                <View style={styles.insightBox}>
+                  <Text style={styles.insightLabel}>Total Spent</Text>
+                  <Text style={styles.insightValue}>{formatCurrency(totalSpent)}</Text>
+                </View>
+                <View style={styles.insightBox}>
+                  <Text style={styles.insightLabel}>Transactions</Text>
+                  <Text style={styles.insightValue}>{transactionCount}</Text>
+                </View>
+                <View style={styles.insightBox}>
+                  <Text style={styles.insightLabel}>Highest Category</Text>
+                  <Text style={styles.insightValue}>{highestCategory}</Text>
+                </View>
+                <View style={styles.insightBox}>
+                  <Text style={styles.insightLabel}>Average Spend</Text>
+                  <Text style={styles.insightValue}>{formatCurrency(averageSpend)}</Text>
+                </View>
+              </Card.Content>
+            </Card>
+
+            <Card style={styles.card}>
+              <Card.Title title="Spending Breakdown" />
+              <Card.Content>
+                <PieChart
+                  data={chartData}
+                  width={screenWidth - 64}
+                  height={220}
+                  chartConfig={chartConfig}
+                  accessor={"population"}
+                  backgroundColor={"transparent"}
+                  paddingLeft={"15"}
+                  center={[screenWidth / 8, 0]}
+                  absolute
+                  hasLegend={false}
+                />
+                <View style={styles.legendWrapper}>
+                  {chartData.map((item) => (
+                    <React.Fragment key={item.name}>
+                      <List.Item
+                        title={item.name}
+                        left={() => <View style={[styles.legendColor, { backgroundColor: item.color }]} />}
+                        right={() => <Text style={styles.legendAmount}>{formatCurrency(item.population)}</Text>}
+                      />
+                      <Divider />
+                    </React.Fragment>
+                  ))}
+                </View>
+              </Card.Content>
+            </Card>
+          </>
         )}
       </ScrollView>
     </View>
@@ -134,7 +166,25 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   card: {
-    // Card styles
+    marginBottom: 16, // Add margin between cards
+  },
+  insightsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  insightBox: {
+    width: '48%', // Two items per row with a small gap
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  insightLabel: {
+    fontSize: 14,
+    color: '#666',
+  },
+  insightValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   legendWrapper: {
     marginTop: 24,
