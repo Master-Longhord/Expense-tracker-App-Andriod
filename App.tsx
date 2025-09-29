@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import { PaperProvider } from 'react-native-paper';
+import { PaperProvider, MD3LightTheme } from 'react-native-paper';
 import AppNavigator from './src/navigation/AppNavigator';
 import { initDB } from './src/services/sqlite';
+
+
+const theme = {
+  ...MD3LightTheme,
+};
 
 export default function App() {
   const [dbInitialized, setDbInitialized] = useState(false);
@@ -27,7 +32,7 @@ export default function App() {
   }
 
   return (
-    <PaperProvider>
+    <PaperProvider theme={theme}>
       <AppNavigator />
     </PaperProvider>
   );
