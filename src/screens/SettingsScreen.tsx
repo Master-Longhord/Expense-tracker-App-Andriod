@@ -1,27 +1,33 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, PermissionsAndroid, Alert, ScrollView } from 'react-native';
-import { Appbar, List, Switch, Divider, Text } from 'react-native-paper';
+import { Appbar, List, Switch, Divider } from 'react-native-paper';
+import { useSMSListener } from '../hooks/useSMSListener';
 
 const SettingsScreen: React.FC = () => {
   const [isSmsEnabled, setIsSmsEnabled] = useState(false);
 
-  // --- Permission logic remains the same ---
-  const requestReadSmsPermission = async () => {
+  const onNewExpenseAdded = () => {
+    console.log("A new expense was added via SMS! Dashboard will refresh on next visit.");
+  };
+
+  useSMSListener(isSmsEnabled, onNewExpenseAdded);
+
+  const requestSmsPermission = async () => {
     try {
-      const granted = await PermissionsAndroid.request(
+      const permissions = [
         PermissionsAndroid.PERMISSIONS.READ_SMS,
-        {
-          title: 'Expense Tracker SMS Permission',
-          message: 'Expense Tracker needs access to your SMS messages to automatically detect transactions.',
-          buttonPositive: 'OK',
-          buttonNegative: 'Cancel',
-        },
-      );
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        console.log('You can now read SMS');
+        PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
+      ];
+      const granted = await PermissionsAndroid.requestMultiple(permissions);
+
+      if (
+        granted['android.permission.READ_SMS'] === PermissionsAndroid.RESULTS.GRANTED &&
+        granted['android.permission.RECEIVE_SMS'] === PermissionsAndroid.RESULTS.GRANTED
+      ) {
+        console.log('SMS Permissions Granted');
         setIsSmsEnabled(true);
       } else {
-        console.log('SMS permission denied');
+        console.log('SMS Permissions Denied');
         setIsSmsEnabled(false);
       }
     } catch (err) {
@@ -32,12 +38,12 @@ const SettingsScreen: React.FC = () => {
 
   const handleSmsToggle = (value: boolean) => {
     if (value) {
-      requestReadSmsPermission();
+      requestSmsPermission();
     } else {
       setIsSmsEnabled(false);
     }
   };
-
+  
   const handleResetApp = () => {
     Alert.alert(
       "Reset App",
@@ -54,9 +60,7 @@ const SettingsScreen: React.FC = () => {
       <Appbar.Header>
         <Appbar.Content title="Settings" />
       </Appbar.Header>
-
       <ScrollView contentContainerStyle={styles.content}>
-        {/* --- AUTOMATION GROUP --- */}
         <List.Section>
           <List.Subheader>Automation</List.Subheader>
           <List.Item
@@ -67,8 +71,6 @@ const SettingsScreen: React.FC = () => {
           />
         </List.Section>
         <Divider />
-
-        {/* --- GENERAL GROUP --- */}
         <List.Section>
           <List.Subheader>General</List.Subheader>
           <List.Item
@@ -84,8 +86,6 @@ const SettingsScreen: React.FC = () => {
           />
         </List.Section>
         <Divider />
-
-        {/* --- DATA GROUP --- */}
         <List.Section>
           <List.Subheader>Data Management</List.Subheader>
           <List.Item

@@ -6,7 +6,7 @@ import { AppNavigatorProps } from '../navigation/types';
 import { formatCurrency } from '../utils/formatters';
 import { getExpenses, Expense } from '../services/sqlite';
 
-const BUDGET = 500000.0; // We'll make this dynamic later
+const BUDGET = 500000.0;
 
 const DashboardScreen: React.FC = () => {
   const navigation = useNavigation<AppNavigatorProps>();
@@ -14,6 +14,7 @@ const DashboardScreen: React.FC = () => {
 
   const loadExpenses = useCallback(async () => {
     try {
+      console.log("Dashboard is refreshing expenses...");
       const storedExpenses = await getExpenses();
       setExpenses(storedExpenses);
     } catch (error) {
@@ -26,7 +27,7 @@ const DashboardScreen: React.FC = () => {
       loadExpenses();
     }, [loadExpenses])
   );
-
+  
   const totalSpent = expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const remainingBudget = BUDGET - totalSpent;
   const budgetProgress = BUDGET > 0 ? totalSpent / BUDGET : 0;
@@ -78,7 +79,7 @@ const DashboardScreen: React.FC = () => {
       <FAB
         icon="plus"
         style={styles.fab}
-        onPress={() => navigation.navigate('AddExpense')}
+        onPress={() => navigation.navigate('AddExpense' as any)}
       />
     </View>
   );
