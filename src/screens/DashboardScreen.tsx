@@ -4,33 +4,48 @@ import { Text, Card, ProgressBar, List, Divider, FAB, Appbar } from 'react-nativ
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { AppNavigatorProps } from '../navigation/types';
 import { formatCurrency } from '../utils/formatters';
-import { getExpenses, Expense } from '../services/sqlite';
-
-const BUDGET = 500000.0;
+import { getExpenses, getBudget, Expense, Budget } from '../services/sqlite';
+import { useSMSListener } from '../hooks/useSMSListener';
 
 const DashboardScreen: React.FC = () => {
   const navigation = useNavigation<AppNavigatorProps>();
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [budget, setBudget] = useState<Budget | null>(null);
 
-  const loadExpenses = useCallback(async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
-      console.log("Dashboard is refreshing expenses...");
-      const storedExpenses = await getExpenses();
+      console.log("Dashboard is refreshing data...");
+      
+      const now = new Date();
+      const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      
+      // Fetch both expenses and budget at the same time
+      const [storedExpenses, storedBudget] = await Promise.all([
+        getExpenses(), // For now, get all expenses. We can filter this later.
+        getBudget(month)
+      ]);
+
       setExpenses(storedExpenses);
+      setBudget(storedBudget);
+      console.log("Current budget loaded:", storedBudget?.amount);
+
     } catch (error) {
-      console.error('Failed to load expenses', error);
+      console.error('Failed to load dashboard data', error);
     }
   }, []);
 
+  useSMSListener(true, loadDashboardData); 
+
   useFocusEffect(
     useCallback(() => {
-      loadExpenses();
-    }, [loadExpenses])
+      loadDashboardData();
+    }, [loadDashboardData])
   );
   
+  const budgetAmount = budget ? budget.amount : 0;
   const totalSpent = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const remainingBudget = BUDGET - totalSpent;
-  const budgetProgress = BUDGET > 0 ? totalSpent / BUDGET : 0;
+  const remainingBudget = budgetAmount - totalSpent;
+  const budgetProgress = budgetAmount > 0 ? totalSpent / budgetAmount : 0;
 
   const renderExpenseItem = ({ item }: { item: Expense }) => (
     <List.Item

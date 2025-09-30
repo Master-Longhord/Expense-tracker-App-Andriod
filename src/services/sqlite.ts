@@ -102,3 +102,31 @@ export const getCategoryWiseExpense = async (startDate?: string): Promise<Catego
     throw error;
   }
 };
+
+export const addOrUpdateBudget = async (budget: Omit<Budget, 'id'>) => {
+  try {
+    await db.runAsync(
+      `INSERT INTO budget (month, amount) VALUES (?, ?)
+       ON CONFLICT(month) DO UPDATE SET amount = excluded.amount;`,
+      budget.month,
+      budget.amount
+    );
+    console.log(`Budget for ${budget.month} set to ${budget.amount}`);
+  } catch (error) {
+    console.error('Error saving budget:', error);
+    throw error;
+  }
+};
+
+export const getBudget = async (month: string): Promise<Budget | null> => {
+  try {
+    const budget = await db.getFirstAsync<Budget>(
+      'SELECT * FROM budget WHERE month = ?',
+      month
+    );
+    return budget || null;
+  } catch (error) {
+    console.error('Error getting budget:', error);
+    throw error;
+  }
+};

@@ -2,28 +2,45 @@ import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { PaperProvider, MD3LightTheme } from 'react-native-paper';
 import AppNavigator from './src/navigation/AppNavigator';
-import { initDB } from './src/services/sqlite';
-
+import { initDB, getBudget } from './src/services/sqlite';
 
 const theme = {
   ...MD3LightTheme,
 };
 
 export default function App() {
-  const [dbInitialized, setDbInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [initialRoute, setInitialRoute] = useState<'Onboarding' | 'Main'>('Onboarding');
 
   useEffect(() => {
-    initDB()
-      .then(() => {
-        setDbInitialized(true);
+    const prepareApp = async () => {
+      try {
+        await initDB();
         console.log('Database initialized successfully');
-      })
-      .catch((err) => {
-        console.error('Database initialization failed', err);
-      });
+
+        const now = new Date();
+        const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        
+        const budget = await getBudget(month);
+
+        if (budget) {
+          console.log('Budget found for this month. Skipping Onboarding.');
+          setInitialRoute('Main');
+        } else {
+          console.log('No budget found. Starting with Onboarding.');
+          setInitialRoute('Onboarding');
+        }
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    prepareApp();
   }, []);
 
-  if (!dbInitialized) {
+  if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" />
@@ -33,7 +50,7 @@ export default function App() {
 
   return (
     <PaperProvider theme={theme}>
-      <AppNavigator />
+      <AppNavigator initialRouteName={initialRoute} />
     </PaperProvider>
   );
 }

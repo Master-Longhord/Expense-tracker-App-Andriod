@@ -3,14 +3,30 @@ import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { Text, TextInput, Button } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
+import { addOrUpdateBudget } from '../services/sqlite';
 
 type OnboardingScreenProps = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 
 const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }) => {
-  const [budget, setBudget] = React.useState('');
+  const [budgetAmount, setBudgetAmount] = React.useState('');
 
-  const handleSetBudget = () => {
-    navigation.replace('Main');
+  const handleSetBudget = async () => {
+    const amount = parseFloat(budgetAmount);
+    if (isNaN(amount) || amount <= 0) {
+      // Basic validation
+      return;
+    }
+
+    try {
+      const now = new Date();
+      const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`; // Format to YYYY-MM
+      
+      await addOrUpdateBudget({ month, amount });
+      
+      navigation.replace('Main');
+    } catch (error) {
+      console.error("Failed to save budget", error);
+    }
   };
 
   return (
@@ -26,9 +42,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }) => {
           You can change this later in the settings.
         </Text>
         <TextInput
-          label="Budget Amount"
-          value={budget}
-          onChangeText={text => setBudget(text)}
+          label="Budget Amount (₦)"
+          value={budgetAmount}
+          onChangeText={text => setBudgetAmount(text)}
           keyboardType="numeric"
           mode="outlined"
           style={styles.input}
@@ -36,7 +52,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }) => {
         <Button
           mode="contained"
           onPress={handleSetBudget}
-          disabled={!budget}
+          disabled={!budgetAmount}
           style={styles.button}
         >
           Get Started

@@ -6,15 +6,18 @@ import { RootStackParamList } from './types';
 import MainTabNavigator from './MainTabNavigator';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import AddExpenseScreen from '../screens/AddExpenseScreen';
-import AnalyticsScreen from '../screens/AnalyticsScreen';
-import SettingsScreen from '../screens/SettingsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-const AppNavigator: React.FC = () => {
+// Define the props for our navigator component
+type AppNavigatorProps = {
+  initialRouteName: 'Onboarding' | 'Main';
+};
+
+const AppNavigator: React.FC<AppNavigatorProps> = ({ initialRouteName }) => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Onboarding">
+      <Stack.Navigator initialRouteName={initialRouteName}>
         <Stack.Screen
           name="Onboarding"
           component={OnboardingScreen}

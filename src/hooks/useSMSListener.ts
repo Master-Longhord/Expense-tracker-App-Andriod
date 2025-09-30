@@ -16,7 +16,7 @@ const parseSms = (sms: string): ParsedExpense | null => {
   if (!amount || isNaN(amount)) return null;
 
   let merchant: string | null = null;
-  const descRegex = /Desc:(.*?)(?:Date:|Avail Bal:|$)/is;
+  const descRegex = /(?:Desc|Description|Narration):(.*?)(?:Date:|Avail Bal:|$)/is;
   const descMatch = sms.match(descRegex);
   if (descMatch) {
     const description = descMatch[1].trim();
