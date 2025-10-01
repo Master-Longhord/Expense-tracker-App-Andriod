@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from 'react';
 import SmsListener from 'react-native-android-sms-listener';
 import { addExpense, Expense } from '../services/sqlite';
+import { sendNewExpenseNotification } from '../utils/notifications'; // <-- 1. IMPORT THE HELPER
 
 type ParsedExpense = Omit<Expense, 'id' | 'date' | 'notes'> & { notes: string };
 
@@ -45,12 +46,9 @@ export const useSMSListener = (isEnabled: boolean, onNewExpense: () => void) => 
     if (isEnabled) {
       console.log('Starting SMS listener with FINAL library...');
       
-      // Define the handler function directly here
       const handleSmsReceived = async (message: any) => {
         console.log("SMS RECEIVED EVENT (FINAL LIBRARY):", message);
         
-        // The message object structure varies by library
-        // Try to get the body from common properties
         const body = message?.body || message?.message || message;
         
         if (body && typeof body === 'string') {
@@ -63,6 +61,10 @@ export const useSMSListener = (isEnabled: boolean, onNewExpense: () => void) => 
               };
               await addExpense(newExpense);
               console.log("SMS expense saved silently to DB");
+
+              // --- 2. TRIGGER NOTIFICATION ---
+              await sendNewExpenseNotification(result.merchant, result.amount);
+
               onNewExpense();
             } catch (error) {
               console.error("Failed to silently save SMS expense", error);
@@ -71,7 +73,6 @@ export const useSMSListener = (isEnabled: boolean, onNewExpense: () => void) => 
         }
       };
 
-      // Add the listener with the function directly
       subscription = SmsListener.addListener(handleSmsReceived);
     }
 
