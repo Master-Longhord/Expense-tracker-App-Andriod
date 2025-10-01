@@ -2,8 +2,12 @@ import React, { useState } from 'react';
 import { View, StyleSheet, PermissionsAndroid, Alert, ScrollView } from 'react-native';
 import { Appbar, List, Switch, Divider } from 'react-native-paper';
 import { useSMSListener } from '../hooks/useSMSListener';
+import { resetDatabase } from '../services/sqlite'; // <-- 1. IMPORT
+import { AppNavigatorProps } from '../navigation/types';
+import { useNavigation } from '@react-navigation/native';
 
 const SettingsScreen: React.FC = () => {
+  const navigation = useNavigation<AppNavigatorProps>();
   const [isSmsEnabled, setIsSmsEnabled] = useState(false);
 
   const onNewExpenseAdded = () => {
@@ -46,11 +50,26 @@ const SettingsScreen: React.FC = () => {
   
   const handleResetApp = () => {
     Alert.alert(
-      "Reset App",
-      "Are you sure you want to delete all your data? This action cannot be undone.",
+      "Reset App Data",
+      "Are you sure you want to delete all your expenses and budget settings? This action cannot be undone.",
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Reset", onPress: () => console.log("Resetting app..."), style: 'destructive' },
+        { 
+          text: "Reset", 
+          onPress: async () => { 
+            try {
+              await resetDatabase();
+              Alert.alert("Success", "All app data has been deleted.");
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Onboarding' }],
+              });
+            } catch (error) {
+              Alert.alert("Error", "Could not reset app data.");
+            }
+          }, 
+          style: 'destructive' 
+        },
       ]
     );
   };

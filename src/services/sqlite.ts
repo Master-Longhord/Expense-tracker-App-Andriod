@@ -130,3 +130,17 @@ export const getBudget = async (month: string): Promise<Budget | null> => {
     throw error;
   }
 };
+
+export const resetDatabase = async () => {
+  try {
+    // The 'DELETE FROM' command removes all rows from a table.
+    await db.execAsync(`
+      DELETE FROM expenses;
+      DELETE FROM budget;
+    `);
+    console.log('Database has been reset successfully.');
+  } catch (error) {
+    console.error('Error resetting database:', error);
+    throw error;
+  }
+};
